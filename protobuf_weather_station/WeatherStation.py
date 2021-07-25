@@ -22,6 +22,7 @@ class WeatherStation:
     gas = 0
     pressure = 0
     sea_level_pressure = 0
+    wind_speed = 0
 
     """Create a new Weather Station with Observations, Network and MessageBus"""
 
@@ -41,7 +42,8 @@ class WeatherStation:
             f"    💦\tHumidity: {self.humidity}\n"
             f"    ☠️\tGas: {self.gas}\n"
             f"    ⬇️\tPressure: {self.pressure}\n"
-            f"    🧭\tAltitude: {self.altitude}"
+            f"    🧭\tAltitude: {self.altitude}\n"
+            f"    💨\tWind Speed: {self.wind_speed}"
         )
 
     def connect(self):
@@ -56,6 +58,7 @@ class WeatherStation:
         self.gas = obs['gas']
         self.pressure = obs['pressure']
         self.sea_level_pressure = obs['sea_level_pressure']
+        self.wind_speed = obs['wind_speed']
 
     def loop(self):
         print('➰ Running Loop')

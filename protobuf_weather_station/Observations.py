@@ -3,7 +3,9 @@
 
 import time
 import board
+import analogio
 import adafruit_bme680
+from simpleio import map_range
 from minipb import Wire
 
 buffer = Wire((
@@ -15,11 +17,23 @@ buffer = Wire((
     ('intervals', 'f'),
     ('gas', 'f'),
     ('humidity', 'f'),
+    ('wind_speed', 'f'),
     ('timestamp', 'f'),
 ))
-test = Wire((
-    ('a', 'V'),
-))
+
+# anemometer defaults
+anemometer_min_volts = 0.4
+anemometer_max_volts = 2.0
+min_wind_speed = 0.0
+max_wind_speed = 32.4
+
+def adc_to_wind_speed(val):
+    """Returns anemometer wind speed, in m/s.
+    :param int val: ADC value
+    """
+    voltage_val = val / 65535 * 3.3
+    return map_range(voltage_val, 0.4, 2, 0, 32.4)
+
 i2c = board.I2C()  # uses board.SCL and board.SDA
 
 
@@ -34,9 +48,12 @@ class Observations:
     altitude = []
     gas = []
     pressure = []
+    wind_speed = []
 
     # Sensor API
     sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+    # Analog Input
+    adc = analogio.AnalogIn(board.A1)
 
     def __init__(self, bus, secrets, callback):
         print('✨ Creating a new Observations Interface()')
@@ -53,6 +70,7 @@ class Observations:
             'gas': self.gas[0],
             'pressure': self.pressure[0],
             'sea_level_pressure': self.sensor.sea_level_pressure,
+            'wind_speed': self.wind_speed[0]
         })
 
     @staticmethod
@@ -70,12 +88,14 @@ class Observations:
             "pressure": sum(self.pressure) / len(self.pressure),
             "altitude": sum(self.altitude) / len(self.altitude),
             "sea_level_pressure": self.sensor.sea_level_pressure,
+            "wind_speed": sum(self.wind_speed)/len(self.wind_speed)
         }
         self.temperature.clear()
         self.humidity.clear()
         self.gas.clear()
         self.pressure.clear()
         self.altitude.clear()
+        self.wind_speed.clear()
         return res
 
     def loop(self):
@@ -87,6 +107,7 @@ class Observations:
             "pressure": self.sensor.pressure,
             "altitude": self.sensor.altitude,
             "sea_level_pressure": self.sensor.sea_level_pressure,
+            "wind_speed": adc_to_wind_speed(self.adc.value)
         })
         if self.interval_start + self.interval < Observations.get_time():
             self.interval_start = Observations.get_time()
@@ -97,3 +118,4 @@ class Observations:
         self.gas.append(self.sensor.gas)
         self.pressure.append(self.sensor.pressure)
         self.altitude.append(self.sensor.altitude)
+        self.wind_speed.append(adc_to_wind_speed(self.adc.value))
