@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 phearzero for Telluric Guru
 # SPDX-License-Identifier: MIT
 import adafruit_esp32spi.adafruit_esp32spi_socket as socket
-import adafruit_minimqtt.adafruit_minimqtt as MQTT
+import adafruit_minimqtt.adafruit_minimqtt as mqtt
 
 
 class MessageBus:
@@ -17,10 +17,10 @@ class MessageBus:
             print("✉️ New message on topic {0}: {1}".format(topic, msg))
 
         # Initialize MQTT interface with the esp interface
-        MQTT.set_socket(socket, esp)
+        mqtt.set_socket(socket, esp)
 
         # Set up a MiniMQTT Client
-        self.client = MQTT.MQTT(
+        self.client = mqtt.MQTT(
             secrets["broker"],
             secrets["port"]
         )
